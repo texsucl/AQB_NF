@@ -1,0 +1,218 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Net;
+using System.Web.Mvc;
+using ActiveQueryBuilder.Core;
+using ActiveQueryBuilder.Core.QueryTransformer;
+using MVC_Samples.Helpers;
+using ActiveQueryBuilder.Web.Server;
+
+namespace MVC_Samples.Controllers
+{
+    public class QueryResultsDemo2Controller : Controller
+    {
+        private const string id = "QueryResultsDemo2";
+        private const string filename = "UserQueriesStructure.xml";
+        private string instanceId = "Oledb";
+
+        public ActionResult Index()
+        {
+            // Get an instance of the QueryBuilder object
+            var qb = QueryBuilderStore.Get(instanceId);
+            var qt = QueryTransformerStore.Get(instanceId);
+
+            if (qb == null)
+                qb = CreateQueryBuilder();
+
+            if (qt == null)
+                qt = CreateQueryTransformer(qb.SQLQuery);
+
+            ViewBag.QueryTransformer = qt;
+
+            return View(qb);
+        }
+
+        public ActionResult GetData(GridModel m)
+        {
+            var qt = QueryTransformerStore.Get(instanceId);
+
+            qt.Skip((m.Pagenum * m.Pagesize).ToString());
+            qt.Take(m.Pagesize == 0 ? "" : m.Pagesize.ToString());
+
+            if (!string.IsNullOrEmpty(m.Sortdatafield))
+            {
+                qt.Sortings.Clear();
+
+                if (!string.IsNullOrEmpty(m.Sortorder))
+                { 
+                    var c = qt.Columns.FindColumnByResultName(m.Sortdatafield);
+
+                    if (c != null)
+                        qt.OrderBy(c, m.Sortorder.ToLower() == "asc");
+                }
+            }
+
+            return GetData(qt, m.Params);
+        }
+        
+        private ActionResult GetData(QueryTransformer qt, Param[] _params)
+        {
+            try
+            {
+                var data = Execute(qt, _params);
+                return Json(data, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception e)
+            {
+                return Json(new ErrorOutput { Error = e.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        private List<Dictionary<string, object>> Execute(QueryTransformer qt, Param[] _params)
+        {
+            var conn = qt.Query.SQLContext.MetadataProvider.Connection;
+            var sql = qt.SQL;
+
+            if (_params != null)
+                foreach (var p in _params)
+                    p.DataType = qt.Query.QueryParameters.First(qp => qp.FullName == p.Name).DataType;
+
+            return DataBaseHelper.GetData(conn, sql, _params);
+        }
+
+        [HttpPost]
+        public ActionResult SelectRecordsCount(Param[] _params)
+        {
+            var qb = QueryBuilderStore.Get(instanceId);
+            var qt = QueryTransformerStore.Get(instanceId);
+            var qtForSelectRecordsCount = new QueryTransformer { QueryProvider = qb.SQLQuery };
+
+            try
+            {
+                qtForSelectRecordsCount.Assign(qt);
+                qtForSelectRecordsCount.Skip("");
+                qtForSelectRecordsCount.Take("");
+                qtForSelectRecordsCount.SelectRecordsCount("recCount");
+
+                try
+                {
+                    var data = Execute(qtForSelectRecordsCount, _params);
+                    return Json(data.First().Values.First(), JsonRequestBehavior.AllowGet);
+                }
+                catch (Exception e)
+                {
+                    return Json(new ErrorOutput {Error = e.Message}, JsonRequestBehavior.AllowGet);
+                }
+            }
+            finally
+            {
+                qtForSelectRecordsCount.Dispose();
+            }
+        }
+
+        private class ErrorOutput
+        {
+            public string Error { get; set; }
+        }
+
+        /// <summary>
+        /// Creates and initializes a new instance of the QueryBuilder object.
+        /// </summary>
+        /// <returns>Returns instance of the QueryBuilder object.</returns>
+        private QueryBuilder CreateQueryBuilder()
+        {
+            // Create an instance of the QueryBuilder object
+            var queryBuilder = QueryBuilderStore.Factory.MSAccess(instanceId);
+
+            // Turn this property on to suppress parsing error messages when user types non-SELECT statements in the text editor.
+            queryBuilder.BehaviorOptions.AllowSleepMode = false;
+
+            // Bind Active Query Builder to a live database connection.
+            queryBuilder.MetadataProvider = new OLEDBMetadataProvider
+            {
+                // Assign an instance of DBConnection object to the Connection property.
+                //Connection = DataBaseHelper.CreateSqLiteConnection("SqLiteDataBase")
+                //Connection = DataBaseHelper.CreateMSAccessConnection("NorthwindDataBase")
+                Connection = DataBaseHelper.CustomOledbConnection(System.Configuration.ConfigurationManager.ConnectionStrings["OledbConnection"].ConnectionString)
+            };
+
+            // Assign the initial SQL query text the user sees on the _first_ page load
+            //queryBuilder.SQL = GetDefaultSql();
+
+            return queryBuilder;
+        }
+        
+        private string GetDefaultSql()
+        {
+            return @"Select o.OrderID,
+                      c.CustomerID As a1,
+                      c.CompanyName,
+                      s.ShipperID
+                    From (Orders o
+                      Inner Join Customers c On o.CustomerID = c.CustomerID)
+                      Inner Join Shippers s On s.ShipperID = o.ShipperID
+                    Where o.Ship_City = 'A'";
+        }
+
+        /// <summary>
+        /// Creates and initializes a new instance of the QueryTransformer object.
+        /// </summary>
+        /// <param name="query">SQL Query to transform.</param>
+        /// <returns>Returns instance of the QueryTransformer object.</returns>
+        private QueryTransformer CreateQueryTransformer(SQLQuery query)
+        {
+            var qt = QueryTransformerStore.Create(instanceId);
+
+            qt.QueryProvider = query;
+            qt.AlwaysExpandColumnsInQuery = true;
+
+            return qt;
+        }
+
+
+        private void ExportUserQueriesToFile(object sender, MetadataStructureItem item)
+        {
+            var uq = (UserQueriesContainer)sender;
+            uq.ExportToXML(Server.MapPath("~/" + filename));
+        }
+
+        private void ImportUserQueriesFromFile(UserQueriesContainer uqc)
+        {
+            var file = Server.MapPath("~/" + filename);
+
+            if (System.IO.File.Exists(file))
+                uqc.ImportFromXML(file);
+        }
+
+        public void GetUserQueriesXml()
+        {
+            var qb = QueryBuilderStore.Get(id);
+            qb.UserQueries.ExportToXML(Response.OutputStream);
+        }
+
+        [ValidateInput(false)]
+        public void LoadUserQueries(string xml)
+        {
+            var qb = QueryBuilderStore.Get(id);
+            qb.UserQueries.XML = xml;
+        }
+    }
+
+    //public class GridModel
+    //{
+    //    public int Pagenum { get; set; }
+    //    public int Pagesize { get; set; }
+    //    public string Sortdatafield { get; set; }
+    //    public string Sortorder { get; set; }
+    //    public Param[] Params { get; set; }
+    //}
+
+    //public class Param
+    //{
+    //    public string Name { get; set; }
+    //    public string Value { get; set; }
+    //    public DbType DataType { get; set; }
+    //}
+}

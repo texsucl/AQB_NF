@@ -1,0 +1,208 @@
+﻿@using ActiveQueryBuilder.Web.Core.HtmlHelpers
+@model ActiveQueryBuilder.Web.Server.QueryBuilder
+@{
+    ViewBag.Title = "ODBC Connection Demo";
+    var controls = Html.QueryBuilder(Model, ViewContext.HttpContext.Request, s => s.Theme = "default");
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <h1>ODBC Connection Demo</h1>
+        <p>Loading metadata from live database.</p>
+    </div>
+    <div class="col-md-12">
+        <button id="loader">Load from localStorage</button>
+        <p>Users can save their queries and use them as data sources in subsequent queries.</p>
+    </div>
+    <div class="col-md-12">
+        @controls.GetHtml()
+        <div class="qb-ui-layout">
+            <div class="qb-ui-layout__top">
+                <div class="qb-ui-layout__left">
+                    <div class="qb-ui-structure-tabs">
+                        <div class="qb-ui-structure-tabs__tab">
+                            <input type="radio" id="tree-tab" name="qb-tabs" checked />
+                            <label for="tree-tab">Database</label>
+                            <div class="qb-ui-structure-tabs__content">
+                                @controls.ObjectTreeView().GetHtml()
+                            </div>
+                        </div>
+                        <div class="qb-ui-structure-tabs__tab">
+                            <input type="radio" id="queries-tab" name="qb-tabs" />
+                            <label for="queries-tab">Queries</label>
+                            <div class="qb-ui-structure-tabs__content">
+                                @controls.UserQueries().GetHtml()
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="qb-ui-layout__right">
+                    @controls.SubQueryNavigationBar().GetHtml()
+                    @controls.Canvas().GetHtml()
+                    @controls.StatusBar().GetHtml()
+                    @controls.Grid().GetHtml()
+                </div>
+            </div>
+            <div class="qb-ui-layout__bottom">
+                <div class="qb-ui-structure-tabs">
+                    <div class="qb-ui-structure-tabs__tab">
+                        <input type="radio" id="w-tab" name="sql-tabs" checked />
+                        <label for="w-tab">Full Query Text</label>
+                        <div class="qb-ui-structure-tabs__content">
+                            <span class="label label-info">Text of the entire SQL query.</span>
+                            @controls.SqlEditor().GetHtml()
+                        </div>
+                    </div>
+                    @*<div class="qb-ui-structure-tabs__tab">
+                            <input type="radio" id="a-tab" name="sql-tabs" />
+                            <label for="a-tab">SubQuery Text</label>
+                            <div class="qb-ui-structure-tabs__content">
+                                <span class="label label-info">Text of the currently visible subquery. May include multiple SELECT statements united with set operators. (UNION, EXCEPT, INTRESECT)</span>
+                                @controls.SqlEditor(s => { s.TargetQueryPart = QueryPart.SubQuery; }).GetHtml()
+                            </div>
+                        </div>
+                        <div class="qb-ui-structure-tabs__tab">
+                            <input type="radio" id="au-tab" name="sql-tabs" />
+                            <label for="au-tab">Single SELECT Text</label>
+                            <div class="qb-ui-structure-tabs__content">
+                                <span class="label label-info">Text of a single SELECT statement: one of the SELECT statements united with set operators in a subquery. (UNION, EXCEPT, INTRESECT)</span>
+                                @controls.SqlEditor(s => { s.TargetQueryPart = QueryPart.UnionSubQuery; }).GetHtml()
+                            </div>
+                        </div>*@
+                    <div class="qb-ui-structure-tabs__tab">
+                        <input type="radio" id="qr-tab" name="sql-tabs" />
+                        <label for="qr-tab">Preview results</label>
+                        <div class="qb-ui-structure-tabs__content">
+                            <a class="link-to-grid-site" href="https://www.jqwidgets.com">https://www.jqwidgets.com</a>
+                            <div id="jqxgrid"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section styles {
+    <link type="text/css" rel="stylesheet" href="~/css/jqx.base.css" />
+
+    <style>
+        .qb-ui-layout__bottom {
+            height: 300px;
+        }
+
+        .qb-ui-layout .qb-ui-layout__left,
+        .qb-ui-layout .qb-ui-layout__right {
+            height: 500px;
+        }
+
+            .qb-ui-layout .qb-ui-layout__right .qb-ui-canvas {
+                height: 300px;
+            }
+
+        .link-to-grid-site {
+            float: right;
+            color: blue !important;
+        }
+
+        .label-info {
+            display: inline-block;
+            font-size: 14px;
+        }
+    </style>
+}
+
+
+@section scripts
+    {
+    <script src="~/js/jqx-all.js"></script>
+    <script>
+        var container = $('#jqxgrid'),
+            grid;
+
+        AQB.Web.onQueryBuilderReady(function (qb) {
+            qb.on(qb.Events.ActiveUnionSubQueryChanged, loadPreview);
+            qb.on(qb.Events.SqlChanged, loadPreview);
+            loadPreview();
+        });
+
+        function loadPreview() {
+            if (grid)
+                grid.jqxGrid('showloadelement');
+
+            $.ajax({
+                url: "SimpleOdbcDemo/GetData",
+                success: function (result) {
+                    if (grid)
+                        grid.jqxGrid('destroy');
+
+                    grid = $('<div class="grid">');
+                    container.append(grid);
+
+                    var source =
+                    {
+                        localdata: result.data,
+                        datafields: result.columns.map(function (c, i) {
+                            return { name: c, map: i.toString() }
+                        }),
+                        datatype: "array"
+                    };
+
+                    var dataAdapter = new $.jqx.dataAdapter(source);
+
+                    grid.jqxGrid(
+                        {
+                            width: '100%',
+                            source: dataAdapter,
+                            columnsresize: true,
+                            columns: result.columns.map(function (c) {
+                                return { text: c, datafield: c }
+                            })
+                        });
+                }
+            });
+        }
+
+        var key = "UserDefinedQueriesDemo";
+
+        function saveToLocalStorage() {
+            setTimeout(function () {
+                $.ajax({
+                    type: 'GET',
+                    url: '/SimpleOdbcDemo/GetUserQueriesXml',
+                    success: function (xml) {
+                        localStorage.setItem(key, xml);
+                        loader.style.display = 'inline-block';
+                    }
+                });
+            }, 1000);
+        }
+
+        function loadFromLocalStorage() {
+            $.ajax({
+                type: 'POST',
+                url: '/SimpleOdbcDemo/LoadUserQueries',
+                data: { xml: localStorage.getItem(key) },
+                success: function () {
+                    AQB.Web.QueryBuilder.fullUpdate();
+                }
+            });
+        }
+
+        AQB.Web.onQueryBuilderReady(function (qb) {
+            var uq = qb.UserQueriesComponent;
+
+            uq.on(uq.Events.OnCreateFolder, saveToLocalStorage);
+            uq.on(uq.Events.OnCreateUserQuery, saveToLocalStorage);
+            uq.on(uq.Events.OnEdit, saveToLocalStorage);
+            uq.on(uq.Events.OnRemove, saveToLocalStorage);
+            uq.on(uq.Events.OnRename, saveToLocalStorage);
+            uq.on(uq.Events.OnSaveUserQuery, saveToLocalStorage);
+
+            loader.addEventListener('click', loadFromLocalStorage);
+        });
+
+        if (localStorage.getItem(key) == null)
+            loader.style.display = 'none';
+    </script>
+}

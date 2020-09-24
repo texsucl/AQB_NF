@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>ActiveQueryBuilder.OracleMetadataProvider</name>
+    </assembly>
+    <members>
+        <member name="T:ActiveQueryBuilder.Core.OracleMetadataProvider">
+            <summary> Metadata Provider for Oracle Database through System.Data.OracleClient (Microsoft). </summary>
+            <seealso cref="!:ActiveQueryBuilder.Core.OracleNativeMetadataProvider"> Metadata Provider for Oracle Database through Oracle.DataAccess.Client (Oracle) </seealso>
+        </member>
+    </members>
+</doc>

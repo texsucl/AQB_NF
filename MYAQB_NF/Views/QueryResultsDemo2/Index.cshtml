@@ -1,0 +1,243 @@
+﻿@using ActiveQueryBuilder.Web.MVC
+@using ActiveQueryBuilder.Core.QueryTransformer
+@using ActiveQueryBuilder.View.QueryView
+@model ActiveQueryBuilder.Web.Server.QueryBuilder
+@{
+    //Layout = null;
+    ViewBag.Title = "Display Query Results Demo";
+    var controls = Html.QueryBuilder(Model, s => s.Theme = "jqueryui");
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <h1>Display Query Results Demo</h1>
+        <p>Displaying SQL query results and modifying SQL queries while browsing the data.</p>
+        <button id="loader">Load from localStorage</button>
+    </div>
+</div>
+<div id="main-tabs" class="block-flat">
+    <ul>
+        <li><a href="#qb">Query Builder</a></li>
+        <li><a href="#qr">Query Results</a></li>
+    </ul>
+    <div class="row" id="qb">
+        <div class="col-md-12">
+            @controls.GetHtml()
+            <div class="qb-ui-layout">
+                <div class="qb-ui-layout__top">
+                    <div class="qb-ui-layout__left">
+                        <div class="qb-ui-structure-tabs">
+                            <div class="qb-ui-structure-tabs__tab">
+                                <input type="radio" id="tree-tab" name="qb-tabs" checked />
+                                <label for="tree-tab">Database</label>
+                                <div class="qb-ui-structure-tabs__content">
+                                    @controls.ObjectTreeView().GetHtml()
+                                </div>
+                            </div>
+                            <div class="qb-ui-structure-tabs__tab">
+                                <input type="radio" id="queries-tab" name="qb-tabs" />
+                                <label for="queries-tab">Queries</label>
+                                <div class="qb-ui-structure-tabs__content">
+                                    @controls.UserQueries().GetHtml()
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="qb-ui-layout__right">
+                        @controls.SubQueryNavigationBar().GetHtml()
+                        @controls.Canvas().GetHtml()
+                        @controls.StatusBar().GetHtml()
+                        @controls.Grid(s =>
+                        {
+                            s.UseCustomExpressionBuilder = AffectedColumns.AllColumns;
+                            s.OrColumnCount = 0;
+                        }).GetHtml()
+                    </div>
+                </div>
+                <div class="qb-ui-layout__bottom">
+                    @controls.SqlEditor().GetHtml()
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row" id="qr">
+        <div class="col-md-3">
+            <div class="table-params"></div>
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-primary execute">Apply</button>
+        </div>
+        <div class="col-md-12">
+            @Html.CriteriaBuilder((QueryTransformer)ViewBag.QueryTransformer).GetHtml()
+        </div>
+        <div class="col-md-12">
+            <div class="alert alert-danger"></div>
+            <div id="dataExplorerContainer" class="block-flat">
+                <!--div id="ur">
+                    <span>Use this transformed query for your own implementation:</span>
+                    <br />
+                    <span class="sql"></span>
+                </div-->
+            </div>
+        </div>
+    </div>
+</div>
+
+@section styles {
+    @*<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />*@
+
+    @*<link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.12.1/themes/redmond/jquery-ui.css" />*@
+    @*<link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" />*@
+    @*<link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.12.1/themes/black-tie/jquery-ui.css" /> *@
+    @*<link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.12.1/themes/blitzer/jquery-ui.css" /> *@
+    @*<link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.12.1/themes/cupertino/jquery-ui.css" /> *@
+    @*<link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.12.1/themes/dark-hive/jquery-ui.css" /> *@
+    @*<link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.12.1/themes/dot-luv/jquery-ui.css" /> *@
+    @*<link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.12.1/themes/eggplant/jquery-ui.css" /> *@
+    @*<link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.12.1/themes/excite-bike/jquery-ui.css" /> *@
+    @*<link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.12.1/themes/flick/jquery-ui.css" /> *@
+    @*<link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.12.1/themes/hot-sneaks/jquery-ui.css" />*@
+    @*<link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.12.1/themes/humanity/jquery-ui.css" /> *@
+    @*<link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.12.1/themes/le-frog/jquery-ui.css" /> *@
+    @*<link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.12.1/themes/overcast/jquery-ui.css" /> *@
+    @*<link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.12.1/themes/pepper-grinder/jquery-ui.css" /> *@
+    @*<link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css" /> *@
+    @*<link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.12.1/themes/south-street/jquery-ui.css" /> *@
+    @*<link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.12.1/themes/start/jquery-ui.css" /> *@
+    @*<link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.12.1/themes/sunny/jquery-ui.css" /> *@
+    @*<link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.12.1/themes/swanky-purse/jquery-ui.css" /> *@
+    @*<link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.12.1/themes/trontastic/jquery-ui.css" /> *@
+    @*<link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.12.1/themes/ui-darkness/jquery-ui.css" /> *@
+    @*<link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.12.1/themes/ui-lightness/jquery-ui.css" /> *@
+    @*<link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.12.1/themes/vader/jquery-ui.css" />*@
+
+    @*<link type="text/css" rel="stylesheet" href="https://jqwidgets.com/public/jqwidgets/styles/jqx.base.css" />
+        <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.css" />
+        <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid-theme.min.css" />
+        <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/5.11.0/jsoneditor.min.css" />
+        <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.26.0/codemirror.min.css" />*@
+
+    <link type="text/css" rel="stylesheet" href="~/Content/jquery-ui_redmond.css" />
+    <link type="text/css" rel="stylesheet" href="~/Content/jqx.base.css" />
+    <link type="text/css" rel="stylesheet" href="~/Content/jsgrid.min.css" />
+    <link type="text/css" rel="stylesheet" href="~/Content/jsgrid-theme.min.css" />
+    <link type="text/css" rel="stylesheet" href="~/Content/jsoneditor.min.css" />
+    <link type="text/css" rel="stylesheet" href="~/Content/codemirror.min.css" />
+
+    <style>
+        #qb, #qr {
+            padding: 5px;
+        }
+
+        #jsoneditor {
+            height: 500px;
+        }
+
+        .link-to-grid-site {
+            float: right;
+            color: blue !important;
+        }
+
+        .jsonPage {
+            margin-left: 5px;
+            font-weight: bold;
+        }
+
+        .execute, .alert-danger {
+            display: none;
+        }
+
+        .ui-datepicker-title {
+            color: black;
+        }
+    </style>
+}
+
+@section scripts {
+
+    @*<script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>*@
+
+    @*<script src="https://code.jquery.com/ui/1.12.0/jquery-ui.min.js"></script>
+    <script src="https://jqwidgets.com/public/jqwidgets/jqx-all.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.1/react.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.1/react-dom.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-data-grid/2.0.78/react-data-grid.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/5.11.0/jsoneditor.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.26.0/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.26.0/mode/sql/sql.min.js"></script>*@
+
+    <script src="~/Scripts/jquery-ui.min.js"></script>
+    <script src="~/Scripts/jqx-all.js"></script>
+    <script src="~/Scripts/react.min.js"></script>
+    <script src="~/Scripts/react-dom.min.js"></script>
+    <script src="~/Scripts/react-data-grid.min.js"></script>
+    <script src="~/Scripts/jsgrid.min.js"></script>
+    <script src="~/Scripts/jsoneditor.min.js"></script>
+    <script src="~/Scripts/codemirror.min.js"></script>
+    <script src="~/Scripts/sql.min.js"></script>
+
+    <script src="~/Scripts/queryResults.js"></script>
+    <script src="~/Scripts/paramsController.js"></script>
+    <script src="~/Scripts/dataExplorer.js"></script>
+    <script src="~/Scripts/jqxGridDataExplorer.js"></script>
+    <script src="~/Scripts/jsGridDataExplorer.js"></script>
+    <script src="~/Scripts/reactGridDataExplorer.js"></script>
+    <script src="~/Scripts/jsonDataExplorer.js"></script>
+
+    <script>
+        var container = $('#dataExplorerContainer');
+        var dataUrl = "QueryResultsDemo2/GetData";
+        var recordsCountUrl = "QueryResultsDemo2/SelectRecordsCount";
+
+        var dataExplorer = new JqxGridDataExplorer(container, dataUrl, recordsCountUrl);
+        // var dataExplorer = new JsGridDataExplorer(container, dataUrl, recordsCountUrl);
+        // var dataExplorer = new ReactGridDataExplorer(container, dataUrl, recordsCountUrl);
+        // var dataExplorer = new JsonDataExplorer(container, dataUrl, recordsCountUrl);
+
+        QueryResultsDemo(dataExplorer);
+
+        var key = "UserDefinedQueriesDemo";
+
+        function saveToLocalStorage() {
+            setTimeout(function () {
+                $.ajax({
+                    type: 'GET',
+                    url: '/QueryResultsDemo2/GetUserQueriesXml',
+                    success: function (xml) {
+                        localStorage.setItem(key, xml);
+                        loader.style.display = 'inline-block';
+                    }
+                });
+            }, 1000);
+        }
+
+        function loadFromLocalStorage() {
+            $.ajax({
+                type: 'POST',
+                url: '/QueryResultsDemo2/LoadUserQueries',
+                data: { xml: localStorage.getItem(key) },
+                success: function () {
+                    AQB.Web.QueryBuilder.fullUpdate();
+                }
+            });
+        }
+
+        AQB.Web.onQueryBuilderReady(function (qb) {
+            var uq = qb.UserQueriesComponent;
+
+            uq.on(uq.Events.OnCreateFolder, saveToLocalStorage);
+            uq.on(uq.Events.OnCreateUserQuery, saveToLocalStorage);
+            uq.on(uq.Events.OnEdit, saveToLocalStorage);
+            uq.on(uq.Events.OnRemove, saveToLocalStorage);
+            uq.on(uq.Events.OnRename, saveToLocalStorage);
+            uq.on(uq.Events.OnSaveUserQuery, saveToLocalStorage);
+
+            loader.addEventListener('click', loadFromLocalStorage);
+        });
+
+        if (localStorage.getItem(key) == null)
+            loader.style.display = 'none';
+    </script>
+}

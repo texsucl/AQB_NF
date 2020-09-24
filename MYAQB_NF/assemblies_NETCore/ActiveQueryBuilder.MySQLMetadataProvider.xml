@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>ActiveQueryBuilder.MySQLMetadataProvider</name>
+    </assembly>
+    <members>
+        <member name="T:ActiveQueryBuilder.Core.MySQLMetadataProvider">
+            <summary> Metadata Provider for MySQL Server. </summary>
+        </member>
+    </members>
+</doc>

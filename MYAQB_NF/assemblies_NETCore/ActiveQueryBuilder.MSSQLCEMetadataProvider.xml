@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>ActiveQueryBuilder.MSSQLCEMetadataProvider</name>
+    </assembly>
+    <members>
+        <member name="T:ActiveQueryBuilder.Core.MSSQLCEMetadataProvider">
+            <summary> Metadata Provider for Microsoft SQL Server Mobile. </summary>
+        </member>
+    </members>
+</doc>

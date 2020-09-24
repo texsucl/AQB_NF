@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>ActiveQueryBuilder.ODBCMetadataProvider</name>
+    </assembly>
+    <members>
+        <member name="T:ActiveQueryBuilder.Core.ODBCMetadataProvider">
+            <summary> Metadata Provider for ODBC Data Sources. </summary>
+        </member>
+    </members>
+</doc>

@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>ActiveQueryBuilder.SQLiteMetadataProvider</name>
+    </assembly>
+    <members>
+        <member name="T:ActiveQueryBuilder.Core.SQLiteMetadataProvider">
+            <summary>Metadata Provider for generic .NET data provider (IDbConnection interface).</summary>
+        </member>
+        <member name="P:ActiveQueryBuilder.Core.SQLiteMetadataProvider.Connection">
+            <summary>Refers to the object that implements the IDbConnection interface.</summary>
+        </member>
+    </members>
+</doc>
